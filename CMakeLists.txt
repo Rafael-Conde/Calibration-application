@@ -33,6 +33,23 @@ target_sources(${EXE_NAME} PUBLIC ${IMGUI_SOURCES})
 
 
 
+
+######################### -- IMPlot source files -- ##########################
+
+set(IMPLOT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/implot.cpp")
+
+list(APPEND IMPLOT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/implot_items.cpp")
+
+#message("IMGUI_SOURCES = ${IMGUI_SOURCES}")
+
+target_sources(${EXE_NAME} PUBLIC ${IMPLOT_SOURCES})
+
+##############################################################################
+
+
+
+
+
 #including the vendor folder as a include folder
 target_include_directories(${EXE_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor")
 

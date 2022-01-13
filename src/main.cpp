@@ -1,94 +1,16 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "implot.h"
 #include <stdio.h>
 #include <cstring>
+#include <iostream>
 
-//to enable the members that are only available to the windows vista and foward
-// members of the struct NOTIFYICONDATA
-//#define NTDDI_VERSION NTDDI_VISTA
-//#define _WIN32_WINNT _WIN32_WINNT_VISTA
-
-/*#define CREATE_MENU_MESSAGE_ (WM_USER+1)
-#define ID_TRAY_EXIT_CONTEXT_MENU_ITEM  3000
-#define ID_TRAY_APP_ICON                5000
-
-#define TRAY_ICON1 "icon.ico"
-#define TRAY_ICON2 "icon.ico"
-#define TRAY_WINAPI 1
-#include "tray.h"
+#include <cmath>
 
 
-//static struct tray tray;
 
-static void toggle_cb(struct tray_menu* item) {
-	printf("toggle cb\n");
-	item->checked = !item->checked;
-	tray_update(&tray);
-}
-
-static void hello_cb(struct tray_menu* item) {
-	(void)item;
-	printf("hello cb\n");
-	if (strcmp(tray.icon, TRAY_ICON1) == 0) {
-		tray.icon = TRAY_ICON2;
-	}
-	else {
-		tray.icon = TRAY_ICON1;
-	}
-	tray_update(&tray);
-}
-
-static void quit_cb(struct tray_menu* item) {
-	(void)item;
-	printf("quit cb\n");
-	tray_exit();
-}
-
-static void submenu_cb(struct tray_menu* item) {
-	(void)item;
-	printf("submenu: clicked on %s\n", item->text);
-	tray_update(&tray);
-}
-
-// Test tray init
-static struct tray tray = {TRAY_ICON1,(struct tray_menu[]){
-			{.text = "Hello", .cb = hello_cb},
-			{.text = "Checked", .checked = 1, .cb = toggle_cb},
-			{.text = "Disabled", .disabled = 1},
-			{.text = "-"},
-			{.text = "SubMenu",
-			 .submenu =
-				 (struct tray_menu[]){
-					 {.text = "FIRST", .checked = 1, .cb = submenu_cb},
-					 {.text = "SECOND",
-					  .submenu =
-						  (struct tray_menu[]){
-							  {.text = "THIRD",
-							   .submenu =
-								   (struct tray_menu[]){
-									   {.text = "7", .cb = submenu_cb},
-									   {.text = "-"},
-									   {.text = "8", .cb = submenu_cb},
-									   {.text = NULL}}},
-							  {.text = "FOUR",
-							   .submenu =
-								   (struct tray_menu[]){
-									   {.text = "5", .cb = submenu_cb},
-									   {.text = "6", .cb = submenu_cb},
-									   {.text = NULL}}},
-							  {.text = NULL}}},
-					 {.text = NULL}}},
-			{.text = "-"},
-			{.text = "Quit", .cb = quit_cb},
-			{.text = NULL}},
-};*/
-
-
-//#if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GL/glew.h>
-//#endif
-
 #define GLFW_EXPOSE_NATIVE_WIN32
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
@@ -105,18 +27,7 @@ static struct tray tray = {TRAY_ICON1,(struct tray_menu[]){
 
 static char window__name[] = "CommandHelper";
 
-//useless toUnicode Method
-/*static std::vector<unsigned int> toUnicode(const char* text)
-{
-	size_t size = strlen(text);
-	std::vector<unsigned int> inUnicode(size + 1);
-	for (size_t i{ 0 }; text[i] != '\0'; i++)
-	{
-		inUnicode.push_back((unsigned short)text[i]);
-	}
-	inUnicode.push_back((unsigned short)'\0');
-	return inUnicode;
-}*/
+
 
 
 static void glfw_error_callback(int error, const char* description)
@@ -124,142 +35,7 @@ static void glfw_error_callback(int error, const char* description)
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-// createSystemTrayStruct method
-/*NOTIFYICONDATA createSystemTrayStruct(HWND window_handle, UINT flags, DWORD dwflags)
-{
-	NOTIFYICONDATA iconData = {};
-
-	/*
-	ULONGLONG ullVersion = GetDllVersion(_T("Shell32.dll"));
-
-	if (ullVersion >= MAKEDLLVERULL(6, 0, 0, 0))
-		iconData.cbSize = sizeof(NOTIFYICONDATA);
-
-	else if (ullVersion >= MAKEDLLVERULL(5, 0, 0, 0))
-		iconData.cbSize = NOTIFYICONDATA_V2_SIZE;
-
-	else iconData.cbSize = NOTIFYICONDATA_V1_SIZE; 
-
-iconData.cbSize = sizeof(NOTIFYICONDATA);
-iconData.hWnd = window_handle;
-iconData.uID = ID_TRAY_APP_ICON;
-iconData.uFlags = flags;// verify the flags to be set
-iconData.uVersion = NOTIFYICON_VERSION_4;
-char text[] = "Guilherme nao passa de um Gayzao!!!";
-for (size_t i{ 0 }; text[i] != '\0'; i++)
-{
-	iconData.szInfo[i] = (unsigned short)text[i];
-}
-iconData.szInfo[strlen(text) + 1] = (unsigned short)'\0';
-// iconData.szInfo
-//iconData.szInfoTitle, "!Delay jão - Tofu Japonês!");
-char textTitle[] = "*Atencao! - Guilherme e gay!*";
-for (size_t i{ 0 }; textTitle[i] != '\0'; i++)
-{
-	iconData.szInfoTitle[i] = (unsigned short)textTitle[i];
-}
-iconData.szInfoTitle[strlen(textTitle) + 1] = (unsigned short)'\0';
-//char textTip[] = "Delay e jao e o tofu e japones";
-char textTip[] = "Guilherme nao passa de um Gayzao!!!";
-for (size_t i{ 0 }; textTip[i] != '\0'; i++)
-{
-	iconData.szTip[i] = (unsigned short)textTip[i];
-}
-iconData.szTip[strlen(textTip) + 1] = (unsigned short)'\0';
-iconData.hBalloonIcon = NULL;
-iconData.uCallbackMessage = CREATE_MENU_MESSAGE_;
-iconData.dwInfoFlags = dwflags;//set the warnning ballon message
-//iconData.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));
-iconData.hIcon = (HICON)LoadImage(NULL, TEXT("green_man.ico"), IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-
-
-return iconData;
-}*/
-
-
-//showPopupMenu method
-/*BOOL ShowPopupMenu(HWND hWnd, POINT* curpos, int wDefaultItem)
-{
-	//ADD MENU ITEMS.------------------------------------------------------------------
-
-	HMENU hPop = CreatePopupMenu();
-
-
-	std::vector<unsigned int> about_vec(toUnicode("About..."));
-	std::vector<unsigned int> exit_vec(toUnicode("Exit"));
-	const unsigned int* about{ &about_vec[0] };
-	const unsigned int* exit{ &exit_vec[0] };
-	InsertMenu(hPop, 0, MF_BYPOSITION | MF_STRING, 0x1, (LPCWSTR)about);
-
-	InsertMenu(hPop, 1, MF_BYPOSITION | MF_STRING, 0x2, (LPCWSTR)exit);
-
-	//CAN DO WITHOUT STUFF.------------------------------------------------------------
-
-	SetMenuDefaultItem(hPop, 0x1, FALSE);
-
-	SetFocus(hWnd);
-
-	SendMessage(hWnd, WM_INITMENUPOPUP, (WPARAM)hPop, 0);
-
-
-
-	//SHOW POPUP MENU.-----------------------------------------------------------------
-
-	{
-
-		//GET CURSOR POSITION TO CREATE POPUP THERE.-------------------------------------
-
-		POINT pt;
-
-		if (!curpos) {
-
-			GetCursorPos(&pt);
-
-			curpos = &pt;
-
-		}
-
-
-
-		{
-
-			//DISPLAT MENU AND WAIT FOR SELECTION.-----------------------------------------
-
-			WORD cmd = TrackPopupMenu(hPop, TPM_LEFTALIGN | TPM_RIGHTBUTTON | TPM_RETURNCMD | TPM_NONOTIFY, curpos->x, curpos->y, 0, hWnd, NULL);
-
-
-
-			//SEND MESSAGE MAPPED TO SELECTED ITEM.----------------------------------------
-
-			SendMessage(hWnd, WM_COMMAND, cmd, 0);
-
-		}
-
-	}
-	return true;
-}*/
-
-
-//window_procedure method
-/*LRESULT CALLBACK window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	printf("WndProc called\n uMsg = %ud\n", uMsg);
-	switch (uMsg) {
-	case ID_TRAY_APP_ICON:
-		//case WM_CREATE:
-		HMENU menu;
-		menu = CreatePopupMenu();
-
-		AppendMenu(menu, MF_STRING, ID_TRAY_EXIT_CONTEXT_MENU_ITEM, TEXT("Exit"));
-
-		break;
-		return 0;
-	default: printf("message failed\n");
-	}
-	return DefWindowProc(hWnd, uMsg, wParam, lParam);
-}*/
-
-
+/*------------------------------------------------------------------------------------*/
 
 int main(int, char**)
 {
@@ -299,83 +75,13 @@ int main(int, char**)
 	bool VSync = true;
 	bool VSync_changed = VSync;
 	glfwSwapInterval(VSync); // Enable vsync
-	
-	
-	
-	
-	/*
-	if (tray_init(&tray) < 0) {
-		printf("failed to create tray\n");
-		return 1;
-	}
-	tray_loop(0);
-	*/
-
-
-
-
-	/*HWND window_handle = glfwGetWin32Window(window);
-
-	HINSTANCE hInst = GetModuleHandle(NULL);
-
-	//REGISTER WINDOW.--------------------------------------------------------------------------
-	WNDCLASSEX wclx;
-	memset(&wclx, 0, sizeof(wclx));
-	wclx.cbSize = sizeof(wclx);
-	//wclx.style = CS_HREDRAW | CS_VREDRAW;
-	//wclx.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	//wclx.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-	wclx.lpfnWndProc = &window_procedure;
-	wclx.lpszClassName = (LPCWSTR)window__name;
-	//wclx.cbClsExtra = 0;
-	//wclx.cbWndExtra = 0;
-	wclx.hInstance = hInst;
-	//wclx.hCursor = LoadCursor(NULL, IDC_ARROW);
-	//wclx.hIcon        = LoadIcon( hInstance, MAKEINTRESOURCE( IDI_TRAYICON ) );
-	//wclx.hIconSm      = LoadSmallIcon( hInstance, IDI_TRAYICON );
-	//wclx.hCursor = NULL;
-	//wclx.hbrBackground = (HBRUSH)COLOR_APPWORKSPACE;
-	//wclx.lpszMenuName = NULL;
-	// wclx.lpszClassName = className;
-	ATOM register_value = RegisterClassEx(&wclx);
-
-	if (register_value)
-	{
-		printf("window Successfully registered!\n");
-		printf("Register value = %u\n", register_value);
-	}
-	else
-	{
-		printf("Fail to register the window\n\n");
-		printf("%ul", GetLastError());
-		printf("\n\n"); \
-			//return -1;
-	}
-
-	NOTIFYICONDATA niData = createSystemTrayStruct(window_handle,
-		(NIF_INFO | NIF_ICON | NIF_REALTIME | NIF_TIP | NIF_SHOWTIP | NIF_MESSAGE),
-		(NIIF_INFO | NIIF_LARGE_ICON));
-	if (Shell_NotifyIcon(NIM_ADD, &niData))
-	{
-		Shell_NotifyIcon(NIM_SETVERSION, &niData);
-		printf("Successfully created the Notification area Icon, check it out!\n");
-	}
-	else
-	{
-		printf("For some reason we failed to create the Notification area icon. :(");
-		return -1;
-	}
-
-
-
-
-	*/
 
 	//glfwHideWindow(window); // hides the window but not the console window that generated this one.
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+	ImPlot::CreateContext();
 	//ImGuiIO& io = ImGui::GetIO(); (void)io;
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -409,18 +115,26 @@ int main(int, char**)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	char textText[24]{};
 	strcpy_s(textText, "Counter = %d");
+	const size_t len{ 1000 };
+	double x[1000];
+	double y[1000];
+
+	for (size_t i{ 0 }; i < len; i++)
+	{
+		x[i] = i*(10.0 / len);
+	}
+
+
+	for (size_t i{ 0 }; i < len; i++)
+	{
+		y[i] = std::sin(x[i]);
+	}
 
 	MSG msg;
 
 	// Main loop
 	while (!glfwWindowShouldClose(window))
 	{
-
-		/*
-		GetMessage(&msg, NULL, 0, 0);
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-		*/
 
 		// Poll and handle events (inputs, window resize, etc.)
 		// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
@@ -435,20 +149,31 @@ int main(int, char**)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		// 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-		if (show_demo_window)
-			ImGui::ShowDemoWindow(&show_demo_window);
+
+		
+		
+
+
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 		{
 			static float f = 0.0f;
 			static int counter = 0;
 
+			ImGui::Begin("Plots");
+
+			if (ImPlot::BeginPlot("Line Plot"))
+			{
+				ImPlot::SetupAxes("x", "sin(x)");
+				ImPlot::PlotLine("sin(x)", x, y, 1000);
+				ImPlot::EndPlot();
+			}
+
+			ImGui::End();
 
 			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
 			ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 			ImGui::Checkbox("Another Window", &show_another_window);
 			ImGui::Checkbox("Activate VSync", &VSync);
 			if (VSync != VSync_changed)
@@ -456,10 +181,7 @@ int main(int, char**)
 				glfwSwapInterval(VSync);
 				VSync_changed = VSync;
 			}
-			static const int mouseButtonValue{ 1 };
-			//if (ImGui::IsMouseReleased(mouseButtonValue))
-			//{
-				//printf("Mouse button %d release\n", mouseButtonValue);
+			
 			if (ImGui::BeginPopupContextWindow())
 			{
 				if (ImGui::MenuItem("Hello"))
@@ -468,7 +190,6 @@ int main(int, char**)
 				}
 				ImGui::EndPopup();
 			}
-			//}
 
 
 
@@ -515,8 +236,7 @@ int main(int, char**)
 	
 	
 	// Cleanup
-	//Shell_NotifyIcon(NIM_DELETE, &niData);
-
+	ImPlot::DestroyContext();
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
