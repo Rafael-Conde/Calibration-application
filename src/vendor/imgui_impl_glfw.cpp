@@ -61,6 +61,22 @@
 #else
 #define GLFW_HAS_NEW_CURSORS          (0)
 #endif
+#include <thread>
+#include <mutex>
+
+extern int user_input_counter;
+extern std::mutex counter_mutex;
+
+void reset_input_counter()
+{
+#ifdef LOW_FPS
+    counter_mutex.lock();
+    user_input_counter = 3;
+    counter_mutex.unlock();
+#endif
+}
+
+
 
 // GLFW data
 enum GlfwClientApi
@@ -123,6 +139,8 @@ void ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow* window, int button, int acti
 
     if (action == GLFW_PRESS && button >= 0 && button < IM_ARRAYSIZE(bd->MouseJustPressed))
         bd->MouseJustPressed[button] = true;
+
+    reset_input_counter();
 }
 
 void ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
@@ -134,6 +152,8 @@ void ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yo
     ImGuiIO& io = ImGui::GetIO();
     io.MouseWheelH += (float)xoffset;
     io.MouseWheel += (float)yoffset;
+
+    reset_input_counter();
 }
 
 void ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -160,6 +180,8 @@ void ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int key, int scancode, int a
 #else
     io.KeySuper = io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
 #endif
+    
+    reset_input_counter();
 }
 
 void ImGui_ImplGlfw_WindowFocusCallback(GLFWwindow* window, int focused)
@@ -170,6 +192,8 @@ void ImGui_ImplGlfw_WindowFocusCallback(GLFWwindow* window, int focused)
 
     ImGuiIO& io = ImGui::GetIO();
     io.AddFocusEvent(focused != 0);
+
+    reset_input_counter();
 }
 
 void ImGui_ImplGlfw_CursorEnterCallback(GLFWwindow* window, int entered)
@@ -182,6 +206,8 @@ void ImGui_ImplGlfw_CursorEnterCallback(GLFWwindow* window, int entered)
         bd->MouseWindow = window;
     if (!entered && bd->MouseWindow == window)
         bd->MouseWindow = NULL;
+
+    reset_input_counter();
 }
 
 void ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned int c)
@@ -192,11 +218,13 @@ void ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned int c)
 
     ImGuiIO& io = ImGui::GetIO();
     io.AddInputCharacter(c);
+    reset_input_counter();
 }
 
 void ImGui_ImplGlfw_MonitorCallback(GLFWmonitor*, int)
 {
 	// Unused in 'master' branch but 'docking' branch will use this, so we declare it ahead of it so if you have to install callbacks you can install this one too.
+    reset_input_counter();
 }
 
 static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, GlfwClientApi client_api)

@@ -31,8 +31,10 @@
 #pragma comment(lib, "legacy_stdio_definitions")
 #endif
 
-static char window__name[] = "CommandHelper";
-std::mutex graph_mutex;
+static char window__name[] = "Calibracao";
+std::mutex graph_mutex{};
+std::mutex counter_mutex{};
+int user_input_counter{ 3 };
 std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> time_reference{ std::chrono::nanoseconds::zero() };
 std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> now{ std::chrono::nanoseconds::zero() };
 float hz{ 1 };
@@ -49,11 +51,20 @@ size_t actual_len{ (total_len - 1) };
 
 void graph_shift()
 {
+	bool counter_big_zero;
 	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 	while (1 && !finish)
 	{
 		now = std::chrono::steady_clock::now();
-		if (((now - time_reference).count() >= period) && hz > 0)
+#ifdef LOW_FPS
+		counter_mutex.lock();
+		counter_big_zero = user_input_counter > 0;
+		counter_mutex.unlock();
+#else
+		counter_big_zero = true;
+#endif
+
+		if ((((now - time_reference).count() >= period) && hz > 0) &&  counter_big_zero)
 		{
 			time_reference = now;
 			//std::this_thread::sleep_for(std::chrono::milliseconds(period));
@@ -175,7 +186,7 @@ int main(int, char**)
 	graph_mutex.lock();
 	for (size_t i{ 0 }; i < actual_len; i++)
 	{
-		x[i] = i * ((pi * 2) / actual_len);
+		x[i] = i * ((pi * 20) / actual_len);
 		y[i] = std::sin(x[i]);
 	}
 	graph_mutex.unlock();
@@ -202,9 +213,19 @@ int main(int, char**)
 		// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
 		// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
 		// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+#ifdef LOW_FPS
+		if (user_input_counter > 0)
+		{
+			glfwPollEvents();
+			user_input_counter--;
+		}
+		else
+		{
+			glfwWaitEvents();
+		}
+#else
 		glfwPollEvents();
-
-
+#endif
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();

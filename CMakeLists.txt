@@ -14,7 +14,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio 17")
 	target_compile_definitions(${EXE_NAME} PUBLIC GLEW_STATIC)
 endif()
 
-
+target_compile_definitions(${EXE_NAME} PUBLIC LOW_FPS)
 
 
 
