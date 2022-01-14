@@ -280,6 +280,8 @@ int main(int, char**)
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(window);
+
+		//adicionar std::conditional_variable::wait + todas as call backs de eventos resetando um contador
 	}
 	finish = true;
 	graph_shifting.join();

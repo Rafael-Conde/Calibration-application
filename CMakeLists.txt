@@ -14,6 +14,31 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio 17")
 	target_compile_definitions(${EXE_NAME} PUBLIC GLEW_STATIC)
 endif()
 
+
+
+
+
+
+########################## -- Adding other source files -- ##########################
+
+#set(OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Callbacks.cpp")
+
+#list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/something.cpp")
+
+#message("IMGUI_SOURCES = ${IMGUI_SOURCES}")
+
+#target_sources(${EXE_NAME} PUBLIC ${OTHER_SOURCES})
+
+##############################################################################
+
+
+
+
+
+
+
+
+
 ########################## -- IMGUI source files -- ##########################
 
 set(IMGUI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/imgui.cpp")
