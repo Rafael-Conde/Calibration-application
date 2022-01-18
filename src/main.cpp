@@ -32,64 +32,12 @@
 #endif
 
 static char window__name[] = "Calibracao";
-std::mutex graph_mutex{};
-std::mutex counter_mutex{};
-int user_input_counter{ 3 };
-std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> time_reference{ std::chrono::nanoseconds::zero() };
-std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> now{ std::chrono::nanoseconds::zero() };
-float hz{ 1 };
-long long period{ static_cast<long long>((1'000'000'000 / (LEN)) * hz) };
+extern int user_input_counter;
 
-double* data1, * data2;
 
-double pi = std::acos(-1);
 
-bool finish{ false };
 
-size_t total_len{ LEN + 1 };
-size_t actual_len{ (total_len - 1) };
 
-void graph_shift()
-{
-	bool counter_big_zero;
-	//std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-	while (1 && !finish)
-	{
-		now = std::chrono::steady_clock::now();
-#ifdef LOW_FPS
-		counter_mutex.lock();
-		counter_big_zero = user_input_counter > 0;
-		counter_mutex.unlock();
-#else
-		counter_big_zero = true;
-#endif
-
-		if ((((now - time_reference).count() >= period) && hz > 0) &&  counter_big_zero)
-		{
-			time_reference = now;
-			//std::this_thread::sleep_for(std::chrono::milliseconds(period));
-			//std::lock_guard<std::mutex> guard(graph_mutex);
-			//data1[actual_len] = data1[0];
-			graph_mutex.lock();
-			data2[actual_len] = data2[0];
-			for (size_t i{ 1 }; i < actual_len; i++)
-			{
-				//data1[(i - 1)] = data1[i];
-				data2[(i - 1)] = data2[i];
-			}
-			//data1[actual_len - 1] = data1[actual_len];
-			data2[actual_len - 1] = data2[actual_len];
-			graph_mutex.unlock();
-			/*
-			for (size_t i{ 0 }; i < actual_len; i++)
-			{
-				data1[i] = i * ((pi * 2) / actual_len);
-				data2[i] = std::sin(data1[i]);
-			}
-			*/
-		}
-	}
-}
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -177,33 +125,9 @@ int main(int, char**)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	char textText[24]{};
 	strcpy_s(textText, "Counter = %d");
-	const size_t len{ LEN };
-	double x[(LEN + 1)];
-	double y[(LEN + 1)];
 	
-
-	std::cout << period << std::endl;
-	graph_mutex.lock();
-	for (size_t i{ 0 }; i < actual_len; i++)
-	{
-		x[i] = i * ((pi * 20) / actual_len);
-		y[i] = std::sin(x[i]);
-	}
-	graph_mutex.unlock();
-	
-
-	x[1000] = 0;
-	y[1000] = 0;
-
-
-
-
-
-	data1 = x;
-	data2 = y;
 
 	MSG msg;
-	std::thread graph_shifting(graph_shift);
 	// Main loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -242,22 +166,7 @@ int main(int, char**)
 			
 			
 
-			ImGui::Begin("Plots");
-
-			if (ImPlot::BeginPlot("Line Plot"))
-			{
-				ImPlot::SetupAxes("x", "sin(x)");
-				graph_mutex.lock();
-				ImPlot::PlotLine("sin(x)", x, y, (len));
-				graph_mutex.unlock();
-				ImPlot::EndPlot();
-			}
-
-
-
-			ImGui::End();
-
-			ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+			ImGui::Begin("Reference window");                          // Create a window called "Hello, world!" and append into it.
             // Display some text (you can use a format strings too)
 			
 			ImGui::Checkbox("Activate VSync", &VSync);
@@ -267,9 +176,7 @@ int main(int, char**)
 				VSync_changed = VSync;
 			}
 
-			ImGui::SliderFloat("Signal Speed", &hz,0.0f,5.0f);
 			
-			period = static_cast<long long>( ((1'000'000'000 / (LEN)) / hz) );
 			
 
 			if (ImGui::BeginPopupContextWindow())
@@ -304,8 +211,6 @@ int main(int, char**)
 
 		//adicionar std::conditional_variable::wait + todas as call backs de eventos resetando um contador
 	}
-	finish = true;
-	graph_shifting.join();
 
 
 	// Cleanup

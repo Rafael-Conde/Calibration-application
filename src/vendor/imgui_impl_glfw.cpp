@@ -64,8 +64,8 @@
 #include <thread>
 #include <mutex>
 
-extern int user_input_counter;
-extern std::mutex counter_mutex;
+std::mutex counter_mutex{};
+int user_input_counter{ 3 };
 
 void reset_input_counter()
 {
