@@ -22,13 +22,16 @@ target_compile_definitions(${EXE_NAME} PUBLIC LOW_FPS)
 
 ########################## -- Adding other source files -- ##########################
 
-#set(OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Callbacks.cpp")
+set(OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/GUI_to_application_processing.cpp")
 
-#list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/something.cpp")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/GUI_to_application_processing.h")
 
 #message("IMGUI_SOURCES = ${IMGUI_SOURCES}")
 
-#target_sources(${EXE_NAME} PUBLIC ${OTHER_SOURCES})
+target_include_directories(${EXE_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
+target_sources(${EXE_NAME} PUBLIC ${OTHER_SOURCES})
+
 
 ##############################################################################
 
@@ -59,6 +62,8 @@ target_compile_definitions(${IMGUI_LIB} PUBLIC GLEW_STATIC)
 
 target_link_libraries(${EXE_NAME} PUBLIC ${IMGUI_LIB})
 
+
+target_compile_definitions(${EXE_NAME} PUBLIC GLEW_STATIC)
 
 ##############################################################################
 

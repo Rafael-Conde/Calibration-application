@@ -9,12 +9,12 @@
 #include <thread>
 #include <mutex>
 #include <cmath>
-
+#include <GUI_to_application_processing.h>
 
 
 #include <limits>
 
-#define LEN 1000
+
 
 #include <GL/glew.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -34,7 +34,9 @@
 static char window__name[] = "Calibracao";
 extern int user_input_counter;
 
+static int sampling_frequency{ 500 };
 
+static int number_of_points{ 1000 };
 
 
 
@@ -45,6 +47,12 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 /*------------------------------------------------------------------------------------*/
+
+
+
+
+/*------------------------------------------------------------------------------------*/
+
 
 int main(int, char**)
 {
@@ -73,6 +81,8 @@ int main(int, char**)
 	const char* glsl_version = "#version 130";
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	//glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, 1);// make it possible that the 
+													  // window is transparent
 	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
@@ -125,8 +135,17 @@ int main(int, char**)
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	char textText[24]{};
 	strcpy_s(textText, "Counter = %d");
-	
 
+
+	GUIToApplicationProcessing guiToAppProcess{};
+
+
+
+	/*bools for IMGUI*/
+
+	bool order_combo{ false };
+
+	
 	MSG msg;
 	// Main loop
 	while (!glfwWindowShouldClose(window))
@@ -155,7 +174,16 @@ int main(int, char**)
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-
+		/* How to create a PopupContextMenu
+			if (ImGui::BeginPopupContextWindow())
+			{
+				if (ImGui::MenuItem("Hello"))
+				{
+					printf("Menu Clicked");
+				}
+				ImGui::EndPopup();
+			}
+			*/
 
 
 
@@ -166,28 +194,63 @@ int main(int, char**)
 			
 			
 
-			ImGui::Begin("Reference window");                          // Create a window called "Hello, world!" and append into it.
+			ImGui::Begin("Config Window");                          // Create a window called "Hello, world!" and append into it.
             // Display some text (you can use a format strings too)
-			
-			ImGui::Checkbox("Activate VSync", &VSync);
-			if (VSync != VSync_changed)
+			if (ImGui::BeginMenu("Menu"))
 			{
-				glfwSwapInterval(VSync);
-				VSync_changed = VSync;
-			}
-
-			
-			
-
-			if (ImGui::BeginPopupContextWindow())
-			{
-				if (ImGui::MenuItem("Hello"))
+				ImGui::Checkbox("Activate VSync", &VSync);
+				if (VSync != VSync_changed)
 				{
-					printf("Menu Clicked");
+					glfwSwapInterval(VSync);
+					VSync_changed = VSync;
 				}
-				ImGui::EndPopup();
+				ImGui::EndMenu();
+			}
+			
+
+			ImGui::Begin("Parametro de Aquisicao/Simulacao");
+			ImGui::BeginGroup();
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x *0.25);
+			ImGui::InputInt("Frequencia de aquisicao",&sampling_frequency);
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.25);
+			ImGui::InputInt("Numero de pontos", &number_of_points);
+			
+			
+			if (ImGui::Button("Ok"))
+			{
+				guiToAppProcess.setNumberPoints(number_of_points);
+				guiToAppProcess.setSamplingRate(sampling_frequency);
+				order_combo = true;
+			}
+			ImGui::EndGroup();
+			if (order_combo)
+			{
+				static char *comboItens[] = {"1° Ordem","2° Ordem"};
+				static char current_selected{ 0 };
+				ImGui::SameLine();
+				if (ImGui::BeginCombo("Ordem do instrumento",comboItens[current_selected]))
+				{
+					/*add code to show the option to the
+					  static sensobility and time constant*/
+					for (int n = 0; n < 2; n++)
+					{
+						bool is_selected = (current_selected == n);
+						if (ImGui::Selectable(comboItens[n], is_selected))
+							current_selected = n;
+
+						// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+						if (is_selected)
+							ImGui::SetItemDefaultFocus();
+					}
+					ImGui::EndCombo();
+
+				}
+
 			}
 
+			ImGui::End();
+			
+			
 
 
 			
@@ -203,7 +266,7 @@ int main(int, char**)
 		int display_w, display_h;
 		glfwGetFramebufferSize(window, &display_w, &display_h);
 		glViewport(0, 0, display_w, display_h);
-		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+		glClearColor(clear_color.x * clear_color.w, clear_color.y *clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
