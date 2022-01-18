@@ -4,6 +4,7 @@ project(App_Calibracao LANGUAGES C CXX VERSION 0.1)
 
 set(EXE_NAME "Calibracao-${CMAKE_PROJECT_VERSION}")
 
+set(IMGUI_LIB "ImGUI")
 
 add_executable(${EXE_NAME} "src/main.cpp")
 
@@ -11,7 +12,7 @@ add_executable(${EXE_NAME} "src/main.cpp")
 if(CMAKE_GENERATOR MATCHES "Visual Studio 17")
 	message("-- Visual Studio Matched!!")
 	list(APPEND CMAKE_CXX_FLAGS "/O2" "/std:c++20")
-	target_compile_definitions(${EXE_NAME} PUBLIC GLEW_STATIC)
+	
 endif()
 
 target_compile_definitions(${EXE_NAME} PUBLIC LOW_FPS)
@@ -52,7 +53,12 @@ list(APPEND IMGUI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/imgui_impl_ope
 
 #message("IMGUI_SOURCES = ${IMGUI_SOURCES}")
 
-target_sources(${EXE_NAME} PUBLIC ${IMGUI_SOURCES})
+add_library(${IMGUI_LIB} STATIC ${IMGUI_SOURCES})
+
+target_compile_definitions(${IMGUI_LIB} PUBLIC GLEW_STATIC)
+
+target_link_libraries(${EXE_NAME} PUBLIC ${IMGUI_LIB})
+
 
 ##############################################################################
 
@@ -61,13 +67,20 @@ target_sources(${EXE_NAME} PUBLIC ${IMGUI_SOURCES})
 
 ######################### -- IMPlot source files -- ##########################
 
+set(IMPLOT "ImPlot")
+
 set(IMPLOT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/implot.cpp")
 
 list(APPEND IMPLOT_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/implot_items.cpp")
 
 #message("IMGUI_SOURCES = ${IMGUI_SOURCES}")
 
-target_sources(${EXE_NAME} PUBLIC ${IMPLOT_SOURCES})
+add_library(${IMPLOT} STATIC ${IMPLOT_SOURCES})
+
+target_link_libraries(${IMPLOT} PUBLIC ${IMGUI_LIB})
+
+target_link_libraries(${EXE_NAME} PUBLIC ${IMPLOT})
+
 
 ##############################################################################
 
@@ -91,6 +104,8 @@ list(APPEND DEPENDENCIES_PATH_LIST ${GLFW})
 
 foreach(DEP_PATH ${DEPENDENCIES_PATH_LIST})
 	#message("current path = ${DEP_PATH}")
+	target_include_directories(${IMGUI_LIB} PUBLIC "${DEP_PATH}/include")
+	target_link_directories(${IMGUI_LIB} PUBLIC "${DEP_PATH}/lib")
 	target_include_directories(${EXE_NAME} PUBLIC "${DEP_PATH}/include")
 	target_link_directories(${EXE_NAME} PUBLIC "${DEP_PATH}/lib")
 endforeach()
@@ -110,6 +125,7 @@ list(APPEND DEPENDENCIES_LIBS opengl32)
 
 foreach(LIB ${DEPENDENCIES_LIBS})
 	#message("LIB = ${LIB}")
+	target_link_libraries(${IMGUI_LIB} PUBLIC ${LIB})
 	target_link_libraries(${EXE_NAME} PUBLIC ${LIB})
 endforeach()
 
