@@ -32,11 +32,20 @@ void ok_eq_param_thread()
 	extern double tau;
 	extern std::mutex static_sensibility_mutex;
 	extern double static_sensibility;
+	extern char current_selected;
 	tau_mutex.lock();
 	guiToAppProcess.setTau(tau);
 	tau_mutex.unlock();
 	static_sensibility_mutex.lock();
 	guiToAppProcess.setStaticSensibility(static_sensibility);
 	static_sensibility_mutex.unlock();
+	switch (current_selected)
+	{
+	case 0:
+		guiToAppProcess.setinstrument_order(1);
+		break;
+	default:
+		break;
+	}
 	//std::cout << "Everything is setup!" << std::endl;
 }

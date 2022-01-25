@@ -1,8 +1,10 @@
 #include "GUI_to_application_processing.h"
 #include <iostream>
+#include "FirstOrderInst.h"
+#include "senoidal_entry.h"
 
 GUIToApplicationProcessing::GUIToApplicationProcessing() : number_of_points{ 0 },
-in_entry{ nullptr }, currentAllocated{ -1 }, sampling_Rate{ 0 }, instrument_order{ -1 },
+in_entry{ nullptr }, currentAllocated{ -1 }, sampling_rate{ 0 }, instrument_order{ -1 },
 inst{ nullptr }, response{ nullptr }, static_sensibility{ 0.0 }, tau{ 0.0 }, t{nullptr}
 {
 	//std::cout << "Constructor called" << std::endl;
@@ -11,6 +13,8 @@ inst{ nullptr }, response{ nullptr }, static_sensibility{ 0.0 }, tau{ 0.0 }, t{n
 GUIToApplicationProcessing::~GUIToApplicationProcessing()
 {
 	delete[] this->in_entry;
+	delete[] this->response;
+	delete[] this->t;
 }
 
 
@@ -68,7 +72,7 @@ void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
 
 void GUIToApplicationProcessing::setSamplingRate(const int &samplingRate)
 {
-	this->sampling_Rate = samplingRate;
+	this->sampling_rate = samplingRate;
 }
 
 void GUIToApplicationProcessing::setInst(Instrument* inst)
@@ -76,6 +80,69 @@ void GUIToApplicationProcessing::setInst(Instrument* inst)
 	this->inst = inst;
 	// chage this function so it actually change function pointers 
 	//that perform tha calculations on the data
+}
+
+int GUIToApplicationProcessing::getNumberPoints()
+{
+	return 0;
+}
+
+double** GUIToApplicationProcessing::getData()
+{
+	return nullptr;
+}
+
+double* GUIToApplicationProcessing::getT()
+{
+	return nullptr;
+}
+
+double* GUIToApplicationProcessing::getInEntry()
+{
+	return nullptr;
+}
+
+void GUIToApplicationProcessing::setFi(double fi)
+{
+	this->fi = fi;
+}
+
+void GUIToApplicationProcessing::setOmega(double omega)
+{
+	this->omega = omega;
+}
+
+void GUIToApplicationProcessing::simulateInstrument()
+{
+	this->inst->respond();
+}
+
+void GUIToApplicationProcessing::prepareSimulation()
+{
+	if (this->inst)
+	{
+		delete this->inst;
+		this->inst = nullptr;
+	}
+	if (this->entry_t)
+	{
+		delete this->entry_t;
+		this->entry_t = nullptr;
+	}
+	switch (this->instrument_order)
+	{
+	case 1:
+		if (this->entry_type == "senoidal")
+		{
+			senoidal* temp_senoidal = new senoidal(this->entry_type, this->static_sensibility, this->tau, this->omega, this->fi);
+			this->entry_t = temp_senoidal;
+			FirstOrderInstrument* temp_foi = new FirstOrderInstrument(this->in_entry, this->response, this->t, this->number_of_points, this->static_sensibility, this->tau, this->sampling_rate, temp_senoidal);
+			this->inst = temp_foi;
+			temp_foi = nullptr;
+			temp_senoidal = nullptr;
+		}
+		break;
+	}
 }
 
 void GUIToApplicationProcessing::setStaticSensibility(const int& static_sensibility)
@@ -95,7 +162,7 @@ bool GUIToApplicationProcessing::isNumberOfPointSet()
 
 bool GUIToApplicationProcessing::isSamplingRateSet()
 {
-	return (this->sampling_Rate) > 0;
+	return (this->sampling_rate) > 0;
 }
 
 bool GUIToApplicationProcessing::isInstrumentOrderSet()
@@ -103,9 +170,4 @@ bool GUIToApplicationProcessing::isInstrumentOrderSet()
 	return (this->instrument_order) > -1;
 }
 
-void GUIToApplicationProcessing::set_buffers(double* t, double* in_entry, double* out_response)
-{
-	this->t = t;
-	this->in_entry = in_entry;
-	this->response = out_response;
-}
+
