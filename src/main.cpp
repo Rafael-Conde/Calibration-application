@@ -10,6 +10,11 @@
 #include <mutex>
 #include <cmath>
 #include <GUI_to_application_processing.h>
+#include <thread_functions.h>
+#include "FirstOrderInst.h"
+#include "senoidal_entry.h"
+
+
 
 
 #include <limits>
@@ -32,12 +37,35 @@
 #endif
 
 static char window__name[] = "Calibracao";
+extern std::mutex counter_mutex;
 extern int user_input_counter;
 
-static int sampling_frequency{ 500 };
+std::mutex sampling_freq_mutex{};
+int sampling_frequency{ 500 };
 
-static int number_of_points{ 1000 };
 
+std::mutex num_of_points_mutex{};
+int number_of_points{ 1000 };
+
+std::mutex tau_mutex{};
+double tau{ 0.01 };
+std::mutex static_sensibility_mutex{};
+double static_sensibility{ 1 };
+
+
+FirstOrderInstrument first_order_instrument{};
+
+
+
+
+GUIToApplicationProcessing guiToAppProcess{};
+
+
+
+/*bools for IMGUI*/
+
+bool order_combo{ false };
+bool show_eq_param_window{ false };
 
 
 
@@ -130,20 +158,12 @@ int main(int, char**)
 	//IM_ASSERT(font != NULL);
 
 	// Our state
-	bool show_demo_window = false;
-	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 	char textText[24]{};
 	strcpy_s(textText, "Counter = %d");
 
 
-	GUIToApplicationProcessing guiToAppProcess{};
-
-
-
-	/*bools for IMGUI*/
-
-	bool order_combo{ false };
+	
 
 	
 	MSG msg;
@@ -160,7 +180,9 @@ int main(int, char**)
 		if (user_input_counter > 0)
 		{
 			glfwPollEvents();
+			counter_mutex.lock();
 			user_input_counter--;
+			counter_mutex.unlock();
 		}
 		else
 		{
@@ -194,8 +216,14 @@ int main(int, char**)
 			
 			
 
-			ImGui::Begin("Config Window");                          // Create a window called "Hello, world!" and append into it.
+			                        // Create a window called "Hello, world!" and append into it.
             // Display some text (you can use a format strings too)
+			
+			
+
+			ImGui::Begin("Parametro de Aquisicao/Simulacao");
+
+
 			if (ImGui::BeginMenu("Menu"))
 			{
 				ImGui::Checkbox("Activate VSync", &VSync);
@@ -206,35 +234,44 @@ int main(int, char**)
 				}
 				ImGui::EndMenu();
 			}
-			
 
-			ImGui::Begin("Parametro de Aquisicao/Simulacao");
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+
+			ImGui::Separator();//--------------------------------------------------------
+
+
+
+
 			ImGui::BeginGroup();
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x *0.25);
+			sampling_freq_mutex.lock();
 			ImGui::InputInt("Frequencia de aquisicao",&sampling_frequency);
+			sampling_freq_mutex.unlock();
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.25);
+			num_of_points_mutex.lock();
 			ImGui::InputInt("Numero de pontos", &number_of_points);
+			num_of_points_mutex.unlock();
 			
 			
 			if (ImGui::Button("Ok"))
 			{
-				guiToAppProcess.setNumberPoints(number_of_points);
-				guiToAppProcess.setSamplingRate(sampling_frequency);
-				order_combo = true;
+				std::thread okButton(ok_graph_button_thread);
+				okButton.detach();
 			}
 			ImGui::EndGroup();
 			if (order_combo)
 			{
-				static char *comboItens[] = {"1° Ordem","2° Ordem"};
+				static char *comboItens[] = {"1 Ordem" ," "};
 				static char current_selected{ 0 };
 				ImGui::SameLine();
 				if (ImGui::BeginCombo("Ordem do instrumento",comboItens[current_selected]))
 				{
-					/*add code to show the option to the
-					  static sensobility and time constant*/
-					for (int n = 0; n < 2; n++)
+					
+					show_eq_param_window = true;
+					for (int n = 0; n < 1; n++)
 					{
-						bool is_selected = (current_selected == n);
+						static bool is_selected = (current_selected == n);
 						if (ImGui::Selectable(comboItens[n], is_selected))
 							current_selected = n;
 
@@ -242,7 +279,31 @@ int main(int, char**)
 						if (is_selected)
 							ImGui::SetItemDefaultFocus();
 					}
+					
 					ImGui::EndCombo();
+
+				}
+				if (show_eq_param_window)
+				{
+					ImGui::Separator();
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.25);
+					static_sensibility_mutex.lock();
+					ImGui::InputDouble("Sensibilidade Estatica", &static_sensibility);
+					static_sensibility_mutex.unlock();
+					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.25);
+					tau_mutex.lock();
+					ImGui::InputDouble("Constante de tempo(Tau)", &tau);
+					tau_mutex.unlock();
+					
+
+
+					if (ImGui::Button("Aplicar Valores"))
+					{
+
+						//change the thread function called
+						std::thread eq_param(ok_eq_param_thread);
+						eq_param.detach();
+					}
 
 				}
 
@@ -250,14 +311,6 @@ int main(int, char**)
 
 			ImGui::End();
 			
-			
-
-
-			
-
-
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-			ImGui::End();
 		}
 
 

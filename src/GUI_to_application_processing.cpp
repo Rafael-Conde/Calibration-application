@@ -2,28 +2,34 @@
 #include <iostream>
 
 GUIToApplicationProcessing::GUIToApplicationProcessing() : number_of_points{ 0 },
-points{ nullptr }, currentAllocated{ -1 }, sampling_Rate{ 0 }, instrument_order{ -1 }
+in_entry{ nullptr }, currentAllocated{ -1 }, sampling_Rate{ 0 }, instrument_order{ -1 },
+inst{ nullptr }, response{ nullptr }, static_sensibility{ 0.0 }, tau{ 0.0 }, t{nullptr}
 {
 	//std::cout << "Constructor called" << std::endl;
 }
 
 GUIToApplicationProcessing::~GUIToApplicationProcessing()
 {
-	delete[] this->points;
+	delete[] this->in_entry;
 }
 
 
 void GUIToApplicationProcessing::reallocNumPoints(const int &number_of_points)
 {
 	double* temp{ new double[number_of_points] };
+	double* resp_temp{ new double[number_of_points] };
 	for (size_t i{ 0 }; i < this->number_of_points; i++)
 	{
-		temp[i] = (this->points)[i];
+		temp[i] = this->in_entry[i];
+		resp_temp[i] = this->response[i];
 	}
-	delete[] this->points;
+	delete[] this->in_entry;
+	delete[] this->response;
 	this->currentAllocated = number_of_points;
-	this->points = temp;
+	this->in_entry = temp;
+	this->response = resp_temp;
 	temp = nullptr;
+	resp_temp = nullptr;
 }
 
 void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
@@ -31,7 +37,7 @@ void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
 	if (number_of_points < 0)
 		return;
 	
-	std::cout << this->points << std::endl;
+	//std::cout << this->points << std::endl;
 	this->number_of_points = number_of_points;
 	if (number_of_points <= this->currentAllocated)
 	{
@@ -44,7 +50,7 @@ void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
 	}
 	else
 	{
-		if (this->points != nullptr)
+		if (this->in_entry != nullptr)
 		{
 			this->reallocNumPoints(number_of_points);
 
@@ -52,7 +58,8 @@ void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
 		else
 		{
 
-			this->points = new double[number_of_points];
+			this->in_entry = new double[number_of_points];
+			this->response = new double[number_of_points];
 			this->currentAllocated = number_of_points;
 		}
 	}
@@ -64,11 +71,21 @@ void GUIToApplicationProcessing::setSamplingRate(const int &samplingRate)
 	this->sampling_Rate = samplingRate;
 }
 
-void GUIToApplicationProcessing::setInstOrder(const char &instrument_order)
+void GUIToApplicationProcessing::setInst(Instrument* inst)
 {
-	this->instrument_order = instrument_order;
+	this->inst = inst;
 	// chage this function so it actually change function pointers 
 	//that perform tha calculations on the data
+}
+
+void GUIToApplicationProcessing::setStaticSensibility(const int& static_sensibility)
+{
+	this->static_sensibility = static_sensibility;
+}
+
+void GUIToApplicationProcessing::setTau(const int& tau)
+{
+	this->tau = tau;
 }
 
 bool GUIToApplicationProcessing::isNumberOfPointSet()
@@ -84,4 +101,11 @@ bool GUIToApplicationProcessing::isSamplingRateSet()
 bool GUIToApplicationProcessing::isInstrumentOrderSet()
 {
 	return (this->instrument_order) > -1;
+}
+
+void GUIToApplicationProcessing::set_buffers(double* t, double* in_entry, double* out_response)
+{
+	this->t = t;
+	this->in_entry = in_entry;
+	this->response = out_response;
 }

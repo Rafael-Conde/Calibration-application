@@ -25,6 +25,16 @@ target_compile_definitions(${EXE_NAME} PUBLIC LOW_FPS)
 set(OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/GUI_to_application_processing.cpp")
 
 list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/GUI_to_application_processing.h")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/thread_functions.cpp")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/thread_functions.h")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Instrument.h")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/Instrument.cpp")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/FirstOrderInst.h")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/FirstOrderInst.cpp")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/entry_t.h")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/entry_t.cpp")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/senoidal_entry.h")
+list(APPEND OTHER_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/senoidal_entry.cpp")
 
 #message("IMGUI_SOURCES = ${IMGUI_SOURCES}")
 
