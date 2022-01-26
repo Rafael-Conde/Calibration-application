@@ -1,5 +1,6 @@
 #include "senoidal_entry.h"
 #include <math.h>
+#include <iostream>
 //#include <iostream>
 
 
@@ -12,7 +13,7 @@ senoidal::senoidal():
 senoidal::senoidal(std::string entry_type, double static_sensibility, double tau, double frequency, double fi) :
 	entry{ entry_type }, tau{ tau }, frequency{ frequency },  static_sensibility{ static_sensibility }, fi{ fi }, phase_angle{atan(frequency*tau)}
 {
-
+	//std::cout << "angle_phase = " << this->phase_angle << std::endl;
 }
 
 senoidal::senoidal(std::string entry_type):	
@@ -80,15 +81,16 @@ senoidal::~senoidal()
 
 double senoidal::particular_solution(double t)
 {
-	return (((this->static_sensibility)*(this->fi))/(sqrt(1+(pow((this->tau*this->frequency), 2))))) * (sin((this->tau*t)+this->phase_angle));
+	//return (  ((this->static_sensibility)*(this->fi))  /  (sqrt(1+(pow((this->tau*this->frequency), 2))  ))  ) * (sin((this->frequency*t)+this->phase_angle));
+	//std::cout << "expression = " << this->tau << std::endl;
+	return (((this->static_sensibility) * (this->fi)) / (sqrt(1 + ( (this->tau * this->frequency)*(this->tau * this->frequency)  )))) * (sin((this->frequency * t) + this->phase_angle));
 }
 
 void senoidal::apply_entry(double* t, double* in_entry, int number_of_points, double sampling_rate)
 {
-	double step{ 1 / sampling_rate };
+	(void)sampling_rate;
 	for (int i{ 0 }; i < number_of_points; i++)
 	{
-		t[i] = step * i;
-		in_entry[i] = sin(t[i]);
+		in_entry[i] = sin(this->frequency*t[i]);
 	}
 }

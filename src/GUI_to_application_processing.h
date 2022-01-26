@@ -28,12 +28,13 @@ public:
 	~GUIToApplicationProcessing();
 
 	// setters
+	void setEntryType(std::string entry_type);
 	void setNumberPoints(const int& number_of_points);
 	void setSamplingRate(const int& samplingRate);
 	void setInst(Instrument* inst);
 	void setInstrument_order(char instrument_order);
 	void setStaticSensibility(const int& static_sensibility);
-	void setTau(const int& tau);
+	void setTau(const double& tau);
 	void setFi(double fi);
 	void setOmega(double omega);
 	//void set_buffers(double* t, double* in_entry, double* out_response);

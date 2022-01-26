@@ -42,7 +42,7 @@ void ok_eq_param_thread()
 	switch (current_selected)
 	{
 	case 0:
-		guiToAppProcess.setinstrument_order(1);
+		guiToAppProcess.setInstrument_order(1);
 		break;
 	default:
 		break;

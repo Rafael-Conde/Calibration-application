@@ -2,10 +2,12 @@
 #include <iostream>
 #include "FirstOrderInst.h"
 #include "senoidal_entry.h"
+#include <mutex>
 
 GUIToApplicationProcessing::GUIToApplicationProcessing() : number_of_points{ 0 },
 in_entry{ nullptr }, currentAllocated{ -1 }, sampling_rate{ 0 }, instrument_order{ -1 },
-inst{ nullptr }, response{ nullptr }, static_sensibility{ 0.0 }, tau{ 0.0 }, t{nullptr}
+inst{ nullptr }, response{ nullptr }, static_sensibility{ 0.0 }, tau{ 0.0 }, t{ nullptr }, 
+entry_t{ nullptr }, fi{ 0.0 }, omega{0.0}
 {
 	//std::cout << "Constructor called" << std::endl;
 }
@@ -22,25 +24,39 @@ void GUIToApplicationProcessing::reallocNumPoints(const int &number_of_points)
 {
 	double* temp{ new double[number_of_points] };
 	double* resp_temp{ new double[number_of_points] };
+	double* t_temp{ new double[number_of_points] };
 	for (size_t i{ 0 }; i < this->number_of_points; i++)
 	{
 		temp[i] = this->in_entry[i];
 		resp_temp[i] = this->response[i];
+		t_temp[i] = this->t[i];
 	}
 	delete[] this->in_entry;
 	delete[] this->response;
+	delete[] this->t;
 	this->currentAllocated = number_of_points;
 	this->in_entry = temp;
 	this->response = resp_temp;
+	this->t = t_temp;
 	temp = nullptr;
 	resp_temp = nullptr;
+	t_temp = nullptr;
 }
 
 void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
 {
 	if (number_of_points < 0)
 		return;
-	
+	extern std::mutex datas_mutex;
+	extern double* t;
+	extern double* in_entry;
+	extern double* out_response;
+
+	datas_mutex.lock();
+	t = nullptr;
+	in_entry = nullptr;
+	out_response = nullptr;
+	datas_mutex.unlock();
 	//std::cout << this->points << std::endl;
 	this->number_of_points = number_of_points;
 	if (number_of_points <= this->currentAllocated)
@@ -64,6 +80,7 @@ void GUIToApplicationProcessing::setNumberPoints(const int &number_of_points)
 
 			this->in_entry = new double[number_of_points];
 			this->response = new double[number_of_points];
+			this->t        = new double[number_of_points];
 			this->currentAllocated = number_of_points;
 		}
 	}
@@ -77,29 +94,50 @@ void GUIToApplicationProcessing::setSamplingRate(const int &samplingRate)
 
 void GUIToApplicationProcessing::setInst(Instrument* inst)
 {
-	this->inst = inst;
+	if (this->inst)
+	{
+		delete this->inst;
+		this->inst = inst;
+	}
+	else
+	{
+		this->inst = inst;
+	}
+	
 	// chage this function so it actually change function pointers 
 	//that perform tha calculations on the data
 }
 
-int GUIToApplicationProcessing::getNumberPoints()
+void GUIToApplicationProcessing::setEntryType(std::string entry_type)
 {
-	return 0;
+	this->entry_type = entry_type;
 }
 
-double** GUIToApplicationProcessing::getData()
+int GUIToApplicationProcessing::getNumberPoints()
 {
-	return nullptr;
+	return this->number_of_points;
 }
+
+void GUIToApplicationProcessing::setInstrument_order(char instrument_order)
+{
+	this->instrument_order = instrument_order;
+}
+
+
 
 double* GUIToApplicationProcessing::getT()
 {
-	return nullptr;
+	return this->t;
 }
 
 double* GUIToApplicationProcessing::getInEntry()
 {
-	return nullptr;
+	return this->in_entry;
+}
+
+double* GUIToApplicationProcessing::getResponse()
+{
+	return this->response;
 }
 
 void GUIToApplicationProcessing::setFi(double fi)
@@ -150,7 +188,7 @@ void GUIToApplicationProcessing::setStaticSensibility(const int& static_sensibil
 	this->static_sensibility = static_sensibility;
 }
 
-void GUIToApplicationProcessing::setTau(const int& tau)
+void GUIToApplicationProcessing::setTau(const double& tau)
 {
 	this->tau = tau;
 }

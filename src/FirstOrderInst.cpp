@@ -12,10 +12,16 @@ void FirstOrderInstrument::respond()
 {
 	if ((this->in_entry) && (this->out_response) && (this->t))
 	{
-		this->entry_t->apply_entry(this->in_entry, this->t, this->number_of_points, this->sampling_rate);
+		double step{ 1.0 / sampling_rate };
+		for (int i{0};i<this->number_of_points;i++)
+		{
+			t[i] = step * i;
+		}
+		this->entry_t->apply_entry(this->t, this->in_entry, this->number_of_points, this->sampling_rate);
 		for (int i{ 0 }; i < this->number_of_points; i++)
 		{
-			out_response[i] = homogene_solution(this->static_sensibility, (-((this->t)[i] / this->tau))) + this->entry_t->particular_solution(t[i]);
+			out_response[i] = homogene_solution(0.0, (-(this->t[i] / this->tau))) + this->entry_t->particular_solution(t[i]);
+			//std::cout<<t[i] <<" - "<<i<< "\n";
 		}
 	}
 	else

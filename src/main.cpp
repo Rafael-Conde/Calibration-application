@@ -8,7 +8,7 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
-#include <cmath>
+#include <math.h>
 #include <GUI_to_application_processing.h>
 #include <thread_functions.h>
 #include "FirstOrderInst.h"
@@ -51,11 +51,18 @@ std::mutex tau_mutex{};
 double tau{ 0.01 };
 std::mutex static_sensibility_mutex{};
 double static_sensibility{ 1 };
-
+extern char current_selected{ 0 };
 
 FirstOrderInstrument first_order_instrument{};
 
 
+std::mutex datas_mutex{};
+double* t{ nullptr };
+double* in_entry{ nullptr };
+double* out_response{ nullptr };
+
+float angular_frequency{ static_cast<float>(2*acos(-1))};
+float amplitude{ 1 };
 
 
 GUIToApplicationProcessing guiToAppProcess{};
@@ -66,8 +73,9 @@ GUIToApplicationProcessing guiToAppProcess{};
 
 bool order_combo{ false };
 bool show_eq_param_window{ false };
-
-
+bool entry_window{ false };
+bool plot_button{ false };
+bool seno_settings_window{ false };
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -263,7 +271,6 @@ int main(int, char**)
 			if (order_combo)
 			{
 				static char *comboItens[] = {"1 Ordem" ," "};
-				static char current_selected{ 0 };
 				ImGui::SameLine();
 				if (ImGui::BeginCombo("Ordem do instrumento",comboItens[current_selected]))
 				{
@@ -299,7 +306,7 @@ int main(int, char**)
 
 					if (ImGui::Button("Aplicar Valores"))
 					{
-
+						entry_window = true;
 						//change the thread function called
 						std::thread eq_param(ok_eq_param_thread);
 						eq_param.detach();
@@ -309,7 +316,72 @@ int main(int, char**)
 
 			}
 
+			if (entry_window)
+			{
+				ImGui::Separator();
+				ImGui::NewLine();
+				ImGui::Text("Selecione a entrada:");
+				if (ImGui::Button("Seno"))
+				{
+					seno_settings_window = true;
+				}
+				ImGui::SameLine();
+				ImGui::NewLine();
+				if (plot_button)
+				{
+					ImGui::Separator();
+					if (ImGui::Button("Plot"))
+					{
+						guiToAppProcess.prepareSimulation();
+						guiToAppProcess.simulateInstrument();
+						t = guiToAppProcess.getT();
+						in_entry = guiToAppProcess.getInEntry();
+						out_response = guiToAppProcess.getResponse();
+					}
+				}
+				
+
+			}
+
 			ImGui::End();
+			datas_mutex.lock();
+			if (t && in_entry && out_response)
+			{
+
+				ImGui::Begin("Plot");
+				if (ImPlot::BeginPlot("Teste"))
+				{
+					ImPlot::PlotLine("Entrada",t,in_entry, guiToAppProcess.getNumberPoints());
+					ImPlot::PlotLine("Saida", t, out_response, guiToAppProcess.getNumberPoints());
+					ImPlot::EndPlot();
+				}
+				ImGui::End();
+			}
+			datas_mutex.unlock();
+
+			
+			if (seno_settings_window)
+			{
+				ImGui::Begin("Parametros da Entrada Seno", &seno_settings_window);
+				ImGui::DragFloat("Velocidade Angular", &angular_frequency, 1.0f);
+				ImGui::DragFloat("Amplitude", &amplitude, 0.01f);
+				if (ImGui::Button("Aplicar Seno"))
+				{
+					guiToAppProcess.setOmega(angular_frequency);
+					guiToAppProcess.setFi(amplitude);
+					guiToAppProcess.setEntryType("senoidal");
+					seno_settings_window = false;
+					plot_button = true;
+				}
+
+
+				ImGui::End();
+			}
+
+
+			
+			
+			
 			
 		}
 
