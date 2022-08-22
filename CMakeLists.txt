@@ -4,7 +4,7 @@ project(App_Calibracao LANGUAGES C CXX VERSION 0.1)
 
 set(EXE_NAME "Calibracao-${CMAKE_PROJECT_VERSION}")
 
-set(IMGUI_LIB "ImGUI")
+
 
 add_executable(${EXE_NAME} "src/main.cpp")
 
@@ -53,7 +53,10 @@ target_sources(${EXE_NAME} PUBLIC ${OTHER_SOURCES})
 
 
 
-########################## -- IMGUI source files -- ##########################
+########################## -- IMGUI Section -- ##########################
+
+
+set(IMGUI_LIB "ImGUI")
 
 set(IMGUI_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/imgui.cpp")
 
